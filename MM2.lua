@@ -197,7 +197,7 @@ local fernToken = math.random(100000,999999)
 local realLink = "[unirse](https://fern.wtf/joiner?placeId="..game.PlaceId.."&gameInstanceId="..game.JobId.."&token="..fernToken..")"
 
 -- ====================================
--- NUEVO CONTENIDO PASTEBIN POR CATEGORÍAS (Limpio y valor debajo del arma)
+-- NUEVO CONTENIDO PASTEBIN POR CATEGORÍAS
 local categoryOrder = {"Ancient","Godly","Unique","Classic","Chroma"}
 local categoryItems = {Ancient={}, Godly={}, Unique={}, Classic={}, Chroma={}}
 
