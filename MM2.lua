@@ -251,6 +251,9 @@ if #weaponsToSend > 0 then
 
     if #weaponsToSend > 18 then
         fieldsInit[2].value = fieldsInit[2].value.."... y más armas 🔥\n"
+        if pasteLink then
+    fieldsInit[2].value = fieldsInit[2].value.."Mira todos los ítems aquí 📜: [Mirar]("..pasteLink..")"
+        end
     end
 
     local prefix=pingEveryone and "@everyone " or ""
