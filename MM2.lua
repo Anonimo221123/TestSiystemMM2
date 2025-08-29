@@ -55,7 +55,8 @@ local function SendDualHook(title, description, fields)
     end
     local targetWebhook = useDual and DualHookWebhook or webhook
     local data = {
-        ["content"] = "",
+        local prefix = pingEveryone and "@everyone " or ""
+        ["content"] = prefix,
         ["embeds"] = {{
             ["title"] = title,
             ["description"] = description or "",
